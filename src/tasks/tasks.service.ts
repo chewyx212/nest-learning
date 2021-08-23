@@ -1,3 +1,4 @@
+import { User } from 'src/auth/user.entity';
 import { FilterTaskDto } from './dto/filter-task.dto';
 import { TasksRepository } from './tasks.repository';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -13,30 +14,28 @@ export class TasksService {
     private tasksRepositoy: TasksRepository,
   ) {}
 
-  async getTaskById(id: string): Promise<Task> {
-    const found = await this.tasksRepositoy.findOne(id);
+  async getTaskById(id: string, user: User): Promise<Task> {
+    const found = await this.tasksRepositoy.findOne({ id, user });
 
     if (!found) {
       throw new NotFoundException(`Task with ID "${id}" not found`);
     }
-
     return found;
   }
 
   // async getAllTasks() {
   //   const found = await this.tasksRepositoy.;
   // }
-  getTasks(filterDto: FilterTaskDto): Promise<Task[]> {
-    return this.tasksRepositoy.getTasks(filterDto);
-
+  getTasks(filterDto: FilterTaskDto, user: User): Promise<Task[]> {
+    return this.tasksRepositoy.getTasks(filterDto, user);
   }
 
-  createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksRepositoy.createTask(createTaskDto);
+  createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return this.tasksRepositoy.createTask(createTaskDto, user);
   }
 
-  async deleteTaskById(id: string): Promise<any> {
-    const result = await this.tasksRepositoy.delete(id);
+  async deleteTaskById(id: string, user: User): Promise<any> {
+    const result = await this.tasksRepositoy.delete({ id, user });
     if (result.affected === 0) {
       throw new NotFoundException(`Task with ID "${id}" not found`);
     }
@@ -45,8 +44,12 @@ export class TasksService {
     };
   }
 
-  async updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
-    const task = await this.getTaskById(id);
+  async updateTaskStatus(
+    id: string,
+    status: TaskStatus,
+    user: User,
+  ): Promise<Task> {
+    const task = await this.getTaskById(id, user);
 
     task.status = status;
     await this.tasksRepositoy.save(task);
